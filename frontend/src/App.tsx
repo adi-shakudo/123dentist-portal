@@ -48,6 +48,7 @@ export default function App() {
           <>
             <Route path="/" element={<AdminDashboard user={user} />} />
             <Route path="/admin/clinics/:clinicId" element={<AdminClinic user={user} />} />
+            <Route path="/portal/:clinicId" element={<ClinicPortal user={user} adminPreview />} />
             <Route path="*" element={<Navigate to="/" />} />
           </>
         ) : (

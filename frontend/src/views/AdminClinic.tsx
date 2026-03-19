@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Upload, LogOut, X, Building2, FolderOpen, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Upload, LogOut, X, Building2, FolderOpen, ChevronRight, Eye } from 'lucide-react'
 import TaskRow from '../components/TaskRow'
 import ProgressBar from '../components/ProgressBar'
 
@@ -143,8 +143,12 @@ export default function AdminClinic({ user }: Props) {
             </button>
             <h1 className="text-2xl font-bold tracking-tight text-[#1a2a38]">{clinic.name}</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <span className="text-sm text-[#6b7a8d]">{user.name || user.email}</span>
+            <button onClick={() => nav(`/portal/${clinicId}`)}
+              className="flex items-center gap-2 border border-[#dde4ed] text-[#1a2a38] bg-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+              <Eye className="w-4 h-4" /> View Clinic Portal
+            </button>
             <button onClick={() => setShowUpload(true)}
               className="flex items-center gap-2 bg-[#1e3a4f] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#284d65] transition-colors">
               <Upload className="w-4 h-4" /> Upload File

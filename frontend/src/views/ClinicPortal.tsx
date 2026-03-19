@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { LogOut, LayoutDashboard } from 'lucide-react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { LogOut, LayoutDashboard, ArrowLeft } from 'lucide-react'
 import TaskRow from '../components/TaskRow'
 import ProgressBar from '../components/ProgressBar'
 
@@ -16,26 +17,30 @@ interface Progress {
 }
 
 interface Me { clinic_id: string; clinic_name: string }
-interface Props { user: { name: string; email: string } }
+interface Props { user: { name: string; email: string }; adminPreview?: boolean }
 
 const EXHIBIT_ORDER = ['Financial Due Diligence', 'Legal Due Diligence', 'Lease', 'Closing Day', 'Onboarding & Integration']
 const PHASE_LABEL: Record<number, string> = { 1: 'Phase 1 — Pre-Partner Date', 2: 'Phase 2 — Partner Date (Closing Day)', 3: 'Phase 3 — Post-Partner Date' }
 
-export default function ClinicPortal({ user }: Props) {
+export default function ClinicPortal({ user, adminPreview }: Props) {
+  const { clinicId: routeClinicId } = useParams<{ clinicId: string }>()
+  const nav = useNavigate()
   const [me, setMe] = useState<Me | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [progress, setProgress] = useState<Progress | null>(null)
-  const [clinicId, setClinicId] = useState<string>('')
+  const [clinicId, setClinicId] = useState<string>(routeClinicId || '')
+
+  const qs = routeClinicId ? `?clinic_id=${routeClinicId}` : ''
 
   const load = () => {
-    fetch('/api/portal/me').then(r => r.ok ? r.json() : null).then(d => {
+    fetch(`/api/portal/me${qs}`).then(r => r.ok ? r.json() : null).then(d => {
       if (d) { setMe(d); setClinicId(d.clinic_id) }
     })
-    fetch('/api/portal/tasks').then(r => r.json()).then(setTasks)
-    fetch('/api/portal/progress').then(r => r.json()).then(setProgress)
+    fetch(`/api/portal/tasks${qs}`).then(r => r.json()).then(setTasks)
+    fetch(`/api/portal/progress${qs}`).then(r => r.json()).then(setProgress)
   }
 
-  useEffect(load, [])
+  useEffect(load, [routeClinicId])
 
   useEffect(() => {
     const es = new EventSource('/api/portal/events')
@@ -143,6 +148,21 @@ export default function ClinicPortal({ user }: Props) {
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden">
+        {adminPreview && (
+          <div className="bg-amber-50 border-b border-amber-200 px-8 py-2 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Admin Preview</span>
+              <span className="text-xs text-amber-600">— viewing as clinic partner</span>
+            </div>
+            <button
+              onClick={() => nav(`/admin/clinics/${routeClinicId}`)}
+              className="flex items-center gap-1.5 text-xs text-amber-700 hover:text-amber-900 font-medium transition-colors"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              Back to Admin View
+            </button>
+          </div>
+        )}
         <header className="flex h-16 items-center justify-between border-b border-[#dde4ed] bg-white px-8 shrink-0">
           <h1 className="text-2xl font-bold tracking-tight text-[#1a2a38]">
             {me?.clinic_name || 'Your Onboarding'}

@@ -5,19 +5,20 @@ from config import MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_FROM, APP_BASE_URL
 def _send(to: str, subject: str, body: str):
     if not MAILGUN_API_KEY:
         print(f"[email] MAILGUN_API_KEY not set — skipping email to {to}")
-        print(f"[email] Subject: {subject}")
-        print(f"[email] Body:\n{body}")
         return
     try:
-        requests.post(
+        resp = requests.post(
             f"https://api.mailgun.net/v3/{MAILGUN_DOMAIN}/messages",
             auth=("api", MAILGUN_API_KEY),
             data={"from": MAILGUN_FROM, "to": to, "subject": subject, "text": body},
             timeout=10,
         )
-        print(f"[email] Sent '{subject}' to {to}")
+        if resp.status_code == 200:
+            print(f"[email] OK {resp.status_code} — '{subject}' to {to}")
+        else:
+            print(f"[email] FAILED {resp.status_code} — {resp.text[:200]}")
     except Exception as e:
-        print(f"[email] Failed: {e}")
+        print(f"[email] Exception: {e}")
 
 
 def send_welcome_email(clinic_name: str, email: str, username: str, password: str):
@@ -65,7 +66,7 @@ One of your onboarding tasks requires your attention:
 
 Task: {task_ref} — {task_name}
 Status: Sent Back for Revision
-{f'What to provide: {what_to_provide}' if what_to_provide else ''}
+{f"What to provide: {what_to_provide}" if what_to_provide else ""}
 
 Please review the instructions on your portal and resubmit the required information.
 

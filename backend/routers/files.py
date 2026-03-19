@@ -104,18 +104,23 @@ def list_clinic_files(clinic_id: str, request: Request, db: Session = Depends(ge
         .order_by(ClinicFile.uploaded_at.desc())
         .all()
     )
-    return [
-        {
-            "id": f.id,
-            "filename": f.original_filename,
-            "task_id": f.task_id,
-            "file_size": f.file_size,
-            "mime_type": f.mime_type,
-            "uploaded_by": f.uploaded_by,
-            "uploaded_at": f.uploaded_at.isoformat(),
-        }
-        for f in files
-    ]
+    return [_enrich_file(f, db) for f in files]
+
+
+def _enrich_file(f: ClinicFile, db) -> dict:
+    task = db.query(Task).filter(Task.id == f.task_id).first() if f.task_id else None
+    return {
+        "id": f.id,
+        "filename": f.original_filename,
+        "file_size": f.file_size,
+        "mime_type": f.mime_type,
+        "uploaded_by": f.uploaded_by,
+        "uploaded_at": f.uploaded_at.isoformat(),
+        "task_id": f.task_id,
+        "task_ref_id": task.ref_id if task else None,
+        "task_name": task.name if task else None,
+        "exhibit": task.exhibit if task else None,
+    }
 
 
 @router.get("/{clinic_id}/files/{file_id}/download")

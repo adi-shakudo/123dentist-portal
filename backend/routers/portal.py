@@ -140,6 +140,36 @@ def get_progress(request: Request, db: Session = Depends(get_db)):
     }
 
 
+@router.get("/documents")
+def get_portal_documents(request: Request, db: Session = Depends(get_db)):
+    clinic = get_clinic_from_session(request, db)
+    files = (
+        db.query(ClinicFile)
+        .filter(ClinicFile.clinic_id == clinic.id)
+        .order_by(ClinicFile.uploaded_at.desc())
+        .all()
+    )
+    result = []
+    for f in files:
+        task = (
+            db.query(Task).filter(Task.id == f.task_id).first() if f.task_id else None
+        )
+        result.append(
+            {
+                "id": f.id,
+                "filename": f.original_filename,
+                "file_size": f.file_size,
+                "mime_type": f.mime_type,
+                "uploaded_at": f.uploaded_at.isoformat(),
+                "task_id": f.task_id,
+                "task_ref_id": task.ref_id if task else None,
+                "task_name": task.name if task else None,
+                "exhibit": task.exhibit if task else None,
+            }
+        )
+    return result
+
+
 @router.get("/info")
 def get_portal_info(request: Request, db: Session = Depends(get_db)):
     clinic = get_clinic_from_session(request, db)

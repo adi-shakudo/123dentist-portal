@@ -231,7 +231,7 @@ export default function AdminClinic({ user }: Props) {
                     <div className="space-y-2">
                       {sectionTasks.map(t => (
                         <TaskRow key={t.clinic_task_id} task={t} isAdmin clinicId={clinicId}
-                          onStatusChange={updateStatus} onToggle={toggleTask} />
+                          onStatusChange={updateStatus} onToggle={toggleTask} onNotify={setNotifyTask} />
                       ))}
                     </div>
                   </section>

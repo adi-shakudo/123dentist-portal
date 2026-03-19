@@ -21,6 +21,7 @@ export default function AdminDashboard({ user }: Props) {
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState({ name: '', email_contact: '', keycloak_username: '' })
   const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState('')
   const nav = useNavigate()
 
   const load = () => {
@@ -34,13 +35,26 @@ export default function AdminDashboard({ user }: Props) {
 
   const createClinic = async () => {
     setCreating(true)
-    const r = await fetch('/api/admin/clinics', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
-    if (r.ok) { setShowCreate(false); setForm({ name: '', email_contact: '', keycloak_username: '' }); load() }
-    setCreating(false)
+    setCreateError('')
+    try {
+      const r = await fetch('/api/admin/clinics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (r.ok) {
+        setShowCreate(false)
+        setForm({ name: '', email_contact: '', keycloak_username: '' })
+        load()
+      } else {
+        const body = await r.json().catch(() => ({}))
+        setCreateError(body.detail || `Error ${r.status} — please try again`)
+      }
+    } catch (e) {
+      setCreateError('Network error — could not reach the server')
+    } finally {
+      setCreating(false)
+    }
   }
 
   return (
@@ -102,8 +116,11 @@ export default function AdminDashboard({ user }: Props) {
                     placeholder="clinic-sunshine" value={form.keycloak_username} onChange={e => setForm(f => ({ ...f, keycloak_username: e.target.value }))} />
                 </div>
               </div>
-              <div className="flex gap-3 mt-6">
-                <button onClick={() => setShowCreate(false)} className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
+              {createError && (
+                <p className="mt-3 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{createError}</p>
+              )}
+              <div className="flex gap-3 mt-4">
+                <button onClick={() => { setShowCreate(false); setCreateError('') }} className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
                 <button onClick={createClinic} disabled={!form.name || !form.email_contact || creating}
                   className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
                   {creating ? 'Creating...' : 'Create Clinic'}

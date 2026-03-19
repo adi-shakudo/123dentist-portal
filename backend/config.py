@@ -4,10 +4,9 @@ import os
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 CLAUDE_MODEL = "claude-sonnet-4-6"
 
-# Database
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:5432/dentist_portal",
+    "sqlite:////tmp/dentist_portal.db",
 )
 
 # Keycloak / OIDC

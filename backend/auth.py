@@ -54,18 +54,19 @@ def get_session(request: Request) -> dict | None:
     return read_session_cookie(cookie)
 
 
+_PUBLIC_PATHS = {"/api/auth/login", "/api/auth/logout", "/api/auth/forgot-password"}
+
+
 async def auth_middleware(request: Request, call_next):
     path = request.url.path
-    public = ["/api/auth/", "/assets/", "/favicon.ico"]
-    if any(path.startswith(p) for p in public):
+
+    if path in _PUBLIC_PATHS or path.startswith("/assets/") or path == "/favicon.ico":
         return await call_next(request)
 
     session = get_session(request)
     if session:
         request.state.user = session
-        return await call_next(request)
-
-    if path.startswith("/api/"):
+    elif path.startswith("/api/"):
         return JSONResponse({"detail": "Unauthorized"}, status_code=401)
 
     return await call_next(request)

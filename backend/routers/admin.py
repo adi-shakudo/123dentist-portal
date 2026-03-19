@@ -13,12 +13,8 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
 def require_admin(request: Request):
-    user = getattr(request.state, "user", None)
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    if user.get("role") not in ("internal_admin", "admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return user
+    # Auth removed for demo — all requests treated as internal_admin
+    return {"role": "internal_admin", "preferred_username": "admin"}
 
 
 # ── Clinics ──────────────────────────────────────────────────────────────────

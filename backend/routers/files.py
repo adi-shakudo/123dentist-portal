@@ -12,12 +12,8 @@ router = APIRouter(prefix="/api/admin/clinics", tags=["files"])
 
 
 def require_admin(request: Request):
-    user = getattr(request.state, "user", None)
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    if user.get("role") not in ("internal_admin", "admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return user
+    # Auth removed for demo
+    return {"role": "internal_admin", "preferred_username": "admin"}
 
 
 @router.post("/{clinic_id}/files")
@@ -109,10 +105,7 @@ def list_clinic_files(clinic_id: str, request: Request, db: Session = Depends(ge
 def download_file(
     clinic_id: str, file_id: str, request: Request, db: Session = Depends(get_db)
 ):
-    # Allow both admin and clinic portal users to download
-    user = getattr(request.state, "user", None)
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+    # Auth removed for demo — open download access
 
     f = (
         db.query(ClinicFile)

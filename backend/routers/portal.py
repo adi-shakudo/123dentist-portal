@@ -9,15 +9,16 @@ router = APIRouter(prefix="/api/portal", tags=["portal"])
 
 
 def get_clinic_from_session(request: Request, db: Session) -> Clinic:
-    user = getattr(request.state, "user", None)
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    username = user.get("preferred_username") or user.get("sub")
-    clinic = db.query(Clinic).filter(Clinic.keycloak_username == username).first()
+    # Auth removed for demo — use ?clinic_id= query param or first clinic
+    clinic_id = request.query_params.get("clinic_id")
+    if clinic_id:
+        clinic = db.query(Clinic).filter(Clinic.id == clinic_id).first()
+    else:
+        clinic = db.query(Clinic).first()
     if not clinic:
         raise HTTPException(
-            status_code=404, detail="No clinic associated with this account"
+            status_code=404,
+            detail="No clinic found. Create a clinic via the admin panel first.",
         )
     return clinic
 

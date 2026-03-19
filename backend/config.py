@@ -24,9 +24,11 @@ SESSION_SECRET = os.environ.get("SESSION_SECRET", "change-me-in-production-abc12
 MINIO_ENDPOINT = os.environ.get(
     "MINIO_ENDPOINT", "minio.hyperplane-minio.svc.cluster.local:9000"
 )
-MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY", "minioadmin")
-MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY", "minioadmin")
-MINIO_BUCKET = os.environ.get("MINIO_BUCKET", "123dentist-portal")
+MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY", "kd109LuJlCPdbtuelI4j")
+MINIO_SECRET_KEY = os.environ.get(
+    "MINIO_SECRET_KEY", "jQ7yBvb6OViGhXRjV1tRcxcu4fjoue5lRqLiamz4"
+)
+MINIO_BUCKET = os.environ.get("MINIO_BUCKET", "dentist-portal-files")
 MINIO_SECURE = os.environ.get("MINIO_SECURE", "false").lower() == "true"
 
 # Mailgun

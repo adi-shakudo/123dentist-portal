@@ -69,3 +69,16 @@ def delete_file(key: str) -> bool:
     except S3Error as e:
         print(f"[storage] Delete error: {e}")
         return False
+
+
+def get_file_bytes(key: str) -> bytes | None:
+    try:
+        client = get_client()
+        response = client.get_object(MINIO_BUCKET, key)
+        data = response.read()
+        response.close()
+        response.release_conn()
+        return data
+    except S3Error as e:
+        print(f"[storage] Get error: {e}")
+        return None

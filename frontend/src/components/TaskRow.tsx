@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, FileText, Download, FolderOpen, Calendar, AlertCircle } from 'lucide-react'
+import { ChevronDown, ChevronRight, FileText, Eye, FolderOpen, Calendar, AlertCircle } from 'lucide-react'
 import StatusBadge from './StatusBadge'
+import FileViewer from './FileViewer'
 
 interface FileItem { id: string; filename: string; uploaded_at: string }
 
@@ -41,6 +42,7 @@ const PRIORITY_COLOR: Record<string, string> = {
 
 export default function TaskRow({ task, isAdmin, clinicId, onStatusChange, onToggle }: TaskRowProps) {
   const [open, setOpen] = useState(false)
+  const [viewFile, setViewFile] = useState<FileItem | null>(null)
 
   if (task.is_tbd) {
     return (
@@ -145,22 +147,40 @@ export default function TaskRow({ task, isAdmin, clinicId, onStatusChange, onTog
               <p className="text-xs font-medium text-[#6b7a8d] uppercase tracking-wide mb-2">Documents</p>
               <div className="space-y-1.5">
                 {task.files.map(f => (
-                  <a
-                    key={f.id}
-                    href={`/api/admin/clinics/${clinicId}/files/${f.id}/download`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-[#2e8fb5] hover:text-[#1e3a4f] hover:underline"
-                  >
-                    <Download className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">{f.filename}</span>
+                  <div key={f.id} className="flex items-center gap-2 group">
+                    <button
+                      onClick={() => setViewFile(f)}
+                      className="flex items-center gap-2 flex-1 min-w-0 text-sm text-[#2e8fb5] hover:text-[#1e3a4f] transition-colors text-left"
+                    >
+                      <FileText className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">{f.filename}</span>
+                      <Eye className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
                     <span className="text-xs text-[#6b7a8d] shrink-0">{new Date(f.uploaded_at).toLocaleDateString()}</span>
-                  </a>
+                    <a
+                      href={`/api/admin/clinics/${clinicId}/files/${f.id}/download`}
+                      download={f.filename}
+                      onClick={e => e.stopPropagation()}
+                      className="text-xs text-[#6b7a8d] hover:text-[#1a2a38] shrink-0 transition-colors"
+                      title="Download"
+                    >
+                      ↓
+                    </a>
+                  </div>
                 ))}
               </div>
             </div>
           )}
         </div>
+      )}
+
+      {viewFile && clinicId && (
+        <FileViewer
+          fileId={viewFile.id}
+          clinicId={clinicId}
+          filename={viewFile.filename}
+          onClose={() => setViewFile(null)}
+        />
       )}
     </div>
   )

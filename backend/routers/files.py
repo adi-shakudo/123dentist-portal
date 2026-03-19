@@ -1,19 +1,36 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, StreamingResponse, Response
 from sqlalchemy.orm import Session
 from typing import Optional
 
 from db import get_db, Clinic, Task, ClinicFile
-from storage import upload_file, get_presigned_url, delete_file
+from storage import upload_file, get_presigned_url, delete_file, get_file_bytes
 import sse
 
 router = APIRouter(prefix="/api/admin/clinics", tags=["files"])
 
+OFFICE_MIME_TYPES = {
+    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "xls": "application/vnd.ms-excel",
+    "csv": "text/csv",
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "doc": "application/msword",
+    "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "ppt": "application/vnd.ms-powerpoint",
+    "pdf": "application/pdf",
+}
+
+INLINE_TYPES = {"pdf", "png", "jpg", "jpeg", "gif", "webp", "svg"}
+
 
 def require_admin(request: Request):
-    # Auth removed for demo
-    return {"role": "internal_admin", "preferred_username": "admin"}
+    user = getattr(request.state, "user", None)
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    if user.get("role") not in ("admin", "internal_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
 
 
 @router.post("/{clinic_id}/files")
@@ -105,7 +122,29 @@ def list_clinic_files(clinic_id: str, request: Request, db: Session = Depends(ge
 def download_file(
     clinic_id: str, file_id: str, request: Request, db: Session = Depends(get_db)
 ):
-    # Auth removed for demo — open download access
+    user = getattr(request.state, "user", None)
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    f = (
+        db.query(ClinicFile)
+        .filter(ClinicFile.id == file_id, ClinicFile.clinic_id == clinic_id)
+        .first()
+    )
+    if not f:
+        raise HTTPException(status_code=404, detail="File not found")
+    url = get_presigned_url(f.storage_key)
+    if not url:
+        raise HTTPException(status_code=500, detail="Could not generate download URL")
+    return RedirectResponse(url=url)
+
+
+@router.get("/{clinic_id}/files/{file_id}/view")
+def view_file(
+    clinic_id: str, file_id: str, request: Request, db: Session = Depends(get_db)
+):
+    user = getattr(request.state, "user", None)
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
     f = (
         db.query(ClinicFile)
@@ -115,10 +154,37 @@ def download_file(
     if not f:
         raise HTTPException(status_code=404, detail="File not found")
 
-    url = get_presigned_url(f.storage_key)
-    if not url:
-        raise HTTPException(status_code=500, detail="Could not generate download URL")
-    return RedirectResponse(url=url)
+    ext = (
+        f.original_filename.rsplit(".", 1)[-1].lower()
+        if "." in f.original_filename
+        else ""
+    )
+    mime = OFFICE_MIME_TYPES.get(ext, f.mime_type or "application/octet-stream")
+
+    if ext in INLINE_TYPES:
+        data = get_file_bytes(f.storage_key)
+        if data is None:
+            raise HTTPException(status_code=500, detail="Could not retrieve file")
+        return Response(
+            content=data,
+            media_type=mime,
+            headers={
+                "Content-Disposition": f'inline; filename="{f.original_filename}"'
+            },
+        )
+
+    presigned = get_presigned_url(f.storage_key, expires_seconds=900)
+    if not presigned:
+        raise HTTPException(status_code=500, detail="Could not generate view URL")
+
+    return {
+        "view_type": "office",
+        "filename": f.original_filename,
+        "ext": ext,
+        "presigned_url": presigned,
+        "google_viewer_url": f"https://docs.google.com/viewer?url={presigned}&embedded=true",
+        "office_viewer_url": f"https://view.officeapps.live.com/op/embed.aspx?src={presigned}",
+    }
 
 
 @router.delete("/{clinic_id}/files/{file_id}")

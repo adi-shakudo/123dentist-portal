@@ -144,6 +144,20 @@ def update_clinic(
     return {"message": "Updated"}
 
 
+@router.delete("/clinics/{clinic_id}")
+def delete_clinic(clinic_id: str, request: Request, db: Session = Depends(get_db)):
+    require_admin(request)
+    clinic = db.query(Clinic).filter(Clinic.id == clinic_id).first()
+    if not clinic:
+        raise HTTPException(status_code=404, detail="Clinic not found")
+    portal_user = db.query(PortalUser).filter(PortalUser.clinic_id == clinic_id).first()
+    if portal_user:
+        db.delete(portal_user)
+    db.delete(clinic)
+    db.commit()
+    return {"message": "Clinic and associated credentials deleted"}
+
+
 # ── Clinic Info ───────────────────────────────────────────────────────────────
 
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, LogOut, Building2, ChevronRight, CheckCircle2, KeyRound } from 'lucide-react'
+import { Plus, LogOut, Building2, ChevronRight, CheckCircle2, Trash2, AlertTriangle } from 'lucide-react'
 import ProgressBar from '../components/ProgressBar'
 
 interface Clinic {
@@ -24,6 +24,8 @@ export default function AdminDashboard({ user }: Props) {
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
   const [createdUsername, setCreatedUsername] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Clinic | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const nav = useNavigate()
 
   const load = () => {
@@ -59,6 +61,19 @@ export default function AdminDashboard({ user }: Props) {
     } finally {
       setCreating(false)
     }
+  }
+
+  const deleteClinic = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      const r = await fetch(`/api/admin/clinics/${deleteTarget.id}`, { method: 'DELETE' })
+      if (r.ok) {
+        setDeleteTarget(null)
+        load()
+      }
+    } catch {}
+    setDeleting(false)
   }
 
   return (
@@ -211,26 +226,75 @@ export default function AdminDashboard({ user }: Props) {
           ) : (
             <div className="grid gap-3">
               {clinics.map(c => (
-                <button
-                  key={c.id}
-                  onClick={() => nav(`/admin/clinics/${c.id}`)}
-                  className="bg-white border border-[#dde4ed] rounded-xl p-5 text-left hover:shadow-md transition-all group"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-[#1a2a38]">{c.name}</h3>
-                        {c.progress === 100 && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
-                      </div>
-                      <p className="text-sm text-[#6b7a8d]">{c.email_contact}</p>
-                      <div className="mt-3">
-                        <ProgressBar pct={c.progress} complete={c.tasks_complete} total={c.tasks_total} />
-                      </div>
+                <div key={c.id} className="bg-white border border-[#dde4ed] rounded-xl p-5 hover:shadow-md transition-all group flex items-start gap-4">
+                  <button
+                    onClick={() => nav(`/admin/clinics/${c.id}`)}
+                    className="flex-1 min-w-0 text-left"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-[#1a2a38]">{c.name}</h3>
+                      {c.progress === 100 && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
                     </div>
-                    <ChevronRight className="w-5 h-5 text-[#6b7a8d] group-hover:text-[#2e8fb5] transition-colors mt-1 shrink-0" />
+                    <p className="text-sm text-[#6b7a8d]">{c.email_contact}</p>
+                    {c.username && <p className="text-xs text-[#6b7a8d]/60 mt-0.5 font-mono">@{c.username}</p>}
+                    <div className="mt-3">
+                      <ProgressBar pct={c.progress} complete={c.tasks_complete} total={c.tasks_total} />
+                    </div>
+                  </button>
+                  <div className="flex items-center gap-2 shrink-0 mt-1">
+                    <ChevronRight
+                      onClick={() => nav(`/admin/clinics/${c.id}`)}
+                      className="w-5 h-5 text-[#6b7a8d] group-hover:text-[#2e8fb5] transition-colors cursor-pointer"
+                    />
+                    <button
+                      onClick={e => { e.stopPropagation(); setDeleteTarget(c) }}
+                      className="p-1.5 rounded-lg text-[#6b7a8d]/40 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      title="Delete clinic"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                </button>
+                </div>
               ))}
+            </div>
+          )}
+
+          {deleteTarget && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-[#1a2a38]">Delete clinic?</h3>
+                    <p className="text-sm text-[#6b7a8d] mt-1">
+                      This will permanently delete <span className="font-semibold text-[#1a2a38]">{deleteTarget.name}</span>, all their tasks, documents, and login credentials. This cannot be undone.
+                    </p>
+                    {deleteTarget.username && (
+                      <p className="text-xs text-[#6b7a8d] mt-2 font-mono bg-gray-50 rounded px-2 py-1 inline-block">
+                        Portal account <span className="font-semibold">@{deleteTarget.username}</span> will be wiped
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setDeleteTarget(null)}
+                    disabled={deleting}
+                    className="flex-1 border border-[#dde4ed] text-[#6b7a8d] px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={deleteClinic}
+                    disabled={deleting}
+                    className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
+                  >
+                    {deleting ? 'Deleting...' : 'Delete Clinic'}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </main>

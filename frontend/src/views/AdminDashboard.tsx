@@ -58,113 +58,150 @@ export default function AdminDashboard({ user }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🦷</span>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">123Dentist Partner Onboarding</h1>
-              <p className="text-xs text-gray-500">Admin Dashboard</p>
+    <div className="flex h-screen overflow-hidden bg-gray-50">
+      {/* Sidebar */}
+      <aside className="flex h-screen w-64 flex-col bg-[#1e3a4f] text-white shrink-0">
+        <div className="flex h-16 items-center gap-3 border-b border-white/10 px-5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white">
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyAGrj-_mCPA_rC69bx9PkCJ4hD-gPcuNI0Q&s"
+              alt="123Dentist"
+              className="h-full w-full object-contain p-0.5"
+            />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-semibold leading-tight tracking-tight text-white">
+              123Dentist Onboarding
+            </span>
+            <span className="text-[10px] text-white/50">
+              Partner Portal
+            </span>
+          </div>
+        </div>
+
+        <nav className="flex-1 px-3 py-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium bg-[#284d65] text-white">
+              <Building2 className="h-4 w-4 shrink-0" />
+              Clinics
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.name || user.email}</span>
-            <a href="/auth/logout" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700">
-              <LogOut className="w-4 h-4" />
+        </nav>
+
+        <div className="border-t border-white/10 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[10px] text-white/40">
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              System Online
+            </div>
+            <a href="/auth/logout" className="flex items-center gap-1 text-[10px] text-white/40 hover:text-white/70 transition-colors">
+              <LogOut className="w-3 h-3" />
               Sign out
             </a>
           </div>
         </div>
-      </header>
+      </aside>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-6">
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top header strip */}
+        <header className="flex h-16 items-center justify-between border-b border-[#dde4ed] bg-white px-8 shrink-0">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Clinic Partners</h2>
-            <p className="text-sm text-gray-500 mt-0.5">{clinics.length} clinics in onboarding</p>
+            <h1 className="text-2xl font-bold tracking-tight text-[#1a2a38]">Clinic Partners</h1>
           </div>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add Clinic
-          </button>
-        </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-[#6b7a8d]">{user.name || user.email}</span>
+            <button
+              onClick={() => setShowCreate(true)}
+              className="flex items-center gap-2 bg-[#1e3a4f] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#284d65] transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Clinic
+            </button>
+          </div>
+        </header>
 
-        {/* Create modal */}
-        {showCreate && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-              <h3 className="text-lg font-semibold mb-4">New Clinic Partner</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">Clinic Name</label>
-                  <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g. Sunshine Dental" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+        {/* Scrollable content area */}
+        <main className="flex-1 overflow-y-auto px-8 py-6">
+          <p className="text-sm text-[#6b7a8d] mb-5">{clinics.length} clinics in onboarding</p>
+
+          {/* Create modal */}
+          {showCreate && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+                <h3 className="text-lg font-semibold text-[#1a2a38] mb-4">New Clinic Partner</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-medium text-[#6b7a8d] uppercase tracking-wide block mb-1.5">Clinic Name</label>
+                    <input className="w-full border border-[#dde4ed] rounded-lg px-3 py-2 text-sm text-[#1a2a38] focus:outline-none focus:ring-2 focus:ring-[#2e8fb5] focus:border-transparent"
+                      placeholder="e.g. Sunshine Dental" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-[#6b7a8d] uppercase tracking-wide block mb-1.5">Contact Email</label>
+                    <input className="w-full border border-[#dde4ed] rounded-lg px-3 py-2 text-sm text-[#1a2a38] focus:outline-none focus:ring-2 focus:ring-[#2e8fb5] focus:border-transparent"
+                      type="email" placeholder="dr.smith@clinic.com" value={form.email_contact} onChange={e => setForm(f => ({ ...f, email_contact: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-[#6b7a8d] uppercase tracking-wide block mb-1.5">
+                      Keycloak Username <span className="text-[#6b7a8d]/60 font-normal normal-case">(for portal login)</span>
+                    </label>
+                    <input className="w-full border border-[#dde4ed] rounded-lg px-3 py-2 text-sm text-[#1a2a38] focus:outline-none focus:ring-2 focus:ring-[#2e8fb5] focus:border-transparent"
+                      placeholder="clinic-sunshine" value={form.keycloak_username} onChange={e => setForm(f => ({ ...f, keycloak_username: e.target.value }))} />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">Contact Email</label>
-                  <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    type="email" placeholder="dr.smith@clinic.com" value={form.email_contact} onChange={e => setForm(f => ({ ...f, email_contact: e.target.value }))} />
+                {createError && (
+                  <p className="mt-3 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{createError}</p>
+                )}
+                <div className="flex gap-3 mt-5">
+                  <button onClick={() => { setShowCreate(false); setCreateError('') }}
+                    className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                    Cancel
+                  </button>
+                  <button onClick={createClinic} disabled={!form.name || !form.email_contact || creating}
+                    className="flex-1 bg-[#1e3a4f] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#284d65] disabled:opacity-50 transition-colors">
+                    {creating ? 'Creating...' : 'Create Clinic'}
+                  </button>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">Keycloak Username <span className="text-gray-400 font-normal">(for portal login)</span></label>
-                  <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="clinic-sunshine" value={form.keycloak_username} onChange={e => setForm(f => ({ ...f, keycloak_username: e.target.value }))} />
-                </div>
-              </div>
-              {createError && (
-                <p className="mt-3 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{createError}</p>
-              )}
-              <div className="flex gap-3 mt-4">
-                <button onClick={() => { setShowCreate(false); setCreateError('') }} className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
-                <button onClick={createClinic} disabled={!form.name || !form.email_contact || creating}
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-                  {creating ? 'Creating...' : 'Create Clinic'}
-                </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : clinics.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
-            <Building2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p>No clinics yet. Add your first clinic partner.</p>
-          </div>
-        ) : (
-          <div className="grid gap-3">
-            {clinics.map(c => (
-              <button
-                key={c.id}
-                onClick={() => nav(`/admin/clinics/${c.id}`)}
-                className="bg-white border border-gray-200 rounded-xl p-5 text-left hover:border-blue-300 hover:shadow-sm transition-all group"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-gray-900">{c.name}</h3>
-                      {c.progress === 100 && <CheckCircle2 className="w-4 h-4 text-green-500" />}
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="w-8 h-8 border-4 border-[#1e3a4f] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : clinics.length === 0 ? (
+            <div className="text-center py-20 text-[#6b7a8d]">
+              <Building2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p>No clinics yet. Add your first clinic partner.</p>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {clinics.map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => nav(`/admin/clinics/${c.id}`)}
+                  className="bg-white border border-[#dde4ed] rounded-xl p-5 text-left hover:shadow-md transition-all group"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-[#1a2a38]">{c.name}</h3>
+                        {c.progress === 100 && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                      </div>
+                      <p className="text-sm text-[#6b7a8d]">{c.email_contact}</p>
+                      <div className="mt-3">
+                        <ProgressBar pct={c.progress} complete={c.tasks_complete} total={c.tasks_total} />
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-500">{c.email_contact}</p>
-                    <div className="mt-3">
-                      <ProgressBar pct={c.progress} complete={c.tasks_complete} total={c.tasks_total} />
-                    </div>
+                    <ChevronRight className="w-5 h-5 text-[#6b7a8d] group-hover:text-[#2e8fb5] transition-colors mt-1 shrink-0" />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors mt-1 shrink-0" />
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </main>
+                </button>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   )
 }

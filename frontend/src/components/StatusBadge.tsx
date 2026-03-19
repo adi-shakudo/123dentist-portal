@@ -1,15 +1,15 @@
 const STATUS_STYLES: Record<string, string> = {
   'Not Started':           'bg-gray-100 text-gray-600',
-  'Submitted':             'bg-blue-100 text-blue-700',
-  'Sent Back for Revision':'bg-amber-100 text-amber-700',
-  'Complete':              'bg-green-100 text-green-700',
+  'Submitted':             'bg-blue-50 text-blue-700',
+  'Sent Back for Revision':'bg-amber-50 text-amber-700',
+  'Complete':              'bg-emerald-50 text-emerald-700',
 }
 
 const STATUS_DOT: Record<string, string> = {
   'Not Started':           'bg-gray-400',
   'Submitted':             'bg-blue-500',
   'Sent Back for Revision':'bg-amber-500',
-  'Complete':              'bg-green-500',
+  'Complete':              'bg-emerald-500',
 }
 
 export default function StatusBadge({ status }: { status: string }) {

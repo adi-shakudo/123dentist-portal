@@ -3,8 +3,21 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --sidebar-bg: #1e3a4f;
+    --sidebar-accent: #284d65;
+    --accent: #2e8fb5;
+    --text-primary: #1a2a38;
+    --text-muted: #6b7a8d;
+    --border-color: #dde4ed;
+  }
+
   body {
     @apply bg-gray-50 text-gray-900 antialiased;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'DM Sans', system-ui, sans-serif;
   }
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, FileText, Eye, FolderOpen, Calendar, AlertCircle } from 'lucide-react'
+import { ChevronDown, ChevronRight, FileText, Eye, FolderOpen, Calendar, AlertCircle, Mail } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import FileViewer from './FileViewer'
 
@@ -31,6 +31,7 @@ interface TaskRowProps {
   clinicId?: string
   onStatusChange?: (clinicTaskId: string, status: string) => void
   onToggle?: (clinicTaskId: string, enabled: boolean) => void
+  onNotify?: (task: Task) => void
 }
 
 const STATUSES = ['Not Started', 'Submitted', 'Sent Back for Revision', 'Complete']
@@ -40,7 +41,7 @@ const PRIORITY_COLOR: Record<string, string> = {
   Low: 'text-[#6b7a8d]',
 }
 
-export default function TaskRow({ task, isAdmin, clinicId, onStatusChange, onToggle }: TaskRowProps) {
+export default function TaskRow({ task, isAdmin, clinicId, onStatusChange, onToggle, onNotify }: TaskRowProps) {
   const [open, setOpen] = useState(false)
   const [viewFile, setViewFile] = useState<FileItem | null>(null)
 
@@ -83,14 +84,24 @@ export default function TaskRow({ task, isAdmin, clinicId, onStatusChange, onTog
         </span>
 
         {isAdmin ? (
-          <select
-            className="text-xs border border-[#dde4ed] rounded-lg px-2 py-1 shrink-0 bg-white text-[#1a2a38] focus:outline-none focus:ring-1 focus:ring-[#2e8fb5]"
-            value={task.status}
-            onClick={e => e.stopPropagation()}
-            onChange={e => onStatusChange?.(task.clinic_task_id!, e.target.value)}
-          >
-            {STATUSES.map(s => <option key={s}>{s}</option>)}
-          </select>
+          <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+            {onNotify && (
+              <button
+                onClick={() => onNotify(task)}
+                className="p-1.5 rounded-lg text-[#6b7a8d]/40 hover:text-[#2e8fb5] hover:bg-blue-50 transition-colors"
+                title="Send email notification to clinic"
+              >
+                <Mail className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <select
+              className="text-xs border border-[#dde4ed] rounded-lg px-2 py-1 bg-white text-[#1a2a38] focus:outline-none focus:ring-1 focus:ring-[#2e8fb5]"
+              value={task.status}
+              onChange={e => onStatusChange?.(task.clinic_task_id!, e.target.value)}
+            >
+              {STATUSES.map(s => <option key={s}>{s}</option>)}
+            </select>
+          </div>
         ) : (
           <div className="shrink-0" onClick={e => e.stopPropagation()}>
             <StatusBadge status={task.status} />

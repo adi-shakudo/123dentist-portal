@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Upload, LogOut, X, Building2, FolderOpen, ChevronRight, Eye, ListTodo, Info, FolderOpen as FolderIcon } from 'lucide-react'
+import { ArrowLeft, Upload, LogOut, X, Building2, FolderOpen, ChevronRight, Eye, ListTodo, Info, CalendarDays, Mail } from 'lucide-react'
 import TaskRow from '../components/TaskRow'
 import ProgressBar from '../components/ProgressBar'
 import ClinicInfoEditor from '../components/ClinicInfoEditor'
 import DocumentStore from '../components/DocumentStore'
+import AdminTimeline from '../components/AdminTimeline'
+import EmailNotifyModal from '../components/EmailNotifyModal'
 
 interface Task {
   clinic_task_id: string; task_id: string; ref_id: string; name: string
@@ -18,7 +20,7 @@ interface Clinic { id: string; name: string; email_contact: string }
 interface Props { user: { name: string; email: string } }
 
 const EXHIBIT_ORDER = ['Financial Due Diligence', 'Legal Due Diligence', 'Lease', 'Closing Day', 'Onboarding & Integration']
-type AdminTab = 'tasks' | 'documents' | 'info'
+type AdminTab = 'tasks' | 'timeline' | 'documents' | 'info'
 
 export default function AdminClinic({ user }: Props) {
   const { clinicId } = useParams<{ clinicId: string }>()
@@ -29,6 +31,7 @@ export default function AdminClinic({ user }: Props) {
   const [uploadTaskId, setUploadTaskId] = useState('')
   const [showUpload, setShowUpload] = useState(false)
   const [activeTab, setActiveTab] = useState<AdminTab>('tasks')
+  const [notifyTask, setNotifyTask] = useState<Task | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const load = () => {
@@ -199,7 +202,7 @@ export default function AdminClinic({ user }: Props) {
 
         <div className="bg-white border-b border-[#dde4ed] px-8 shrink-0">
           <div className="flex">
-            {([['tasks', 'Tasks', ListTodo], ['documents', 'Documents', FolderOpen], ['info', 'Clinic Info', Info]] as [AdminTab, string, any][]).map(([id, label, Icon]) => (
+            {([['tasks', 'Tasks', ListTodo], ['timeline', 'Timeline', CalendarDays], ['documents', 'Documents', FolderOpen], ['info', 'Clinic Info', Info]] as [AdminTab, string, any][]).map(([id, label, Icon]) => (
               <button key={id} onClick={() => setActiveTab(id)} className={'flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ' + (activeTab === id ? 'border-[#1e3a4f] text-[#1e3a4f]' : 'border-transparent text-[#6b7a8d] hover:text-[#1a2a38]')}>
                 <Icon className="w-4 h-4" />{label}
               </button>
@@ -236,6 +239,15 @@ export default function AdminClinic({ user }: Props) {
               })}
             </div>
           )}
+          {activeTab === 'timeline' && clinic && (
+            <AdminTimeline
+              tasks={tasks}
+              clinicId={clinicId!}
+              clinicName={clinic.name}
+              clinicEmail={clinic.email_contact}
+              onStatusChange={updateStatus}
+            />
+          )}
           {activeTab === 'documents' && clinicId && (
             <DocumentStore clinicId={clinicId} isAdmin onDelete={() => {}} />
           )}
@@ -244,6 +256,17 @@ export default function AdminClinic({ user }: Props) {
           )}
         </main>
       </div>
+
+      {notifyTask && clinic && (
+        <EmailNotifyModal
+          task={notifyTask}
+          clinicId={clinicId!}
+          clinicName={clinic.name}
+          clinicEmail={clinic.email_contact}
+          portalUrl='https://123dentist-portal-public.dev.hyperplane.dev'
+          onClose={() => setNotifyTask(null)}
+        />
+      )}
     </div>
   )
 }

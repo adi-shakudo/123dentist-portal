@@ -323,6 +323,37 @@ async def update_clinic_task(
     return {"message": "Updated", "status": ct.status}
 
 
+# ── Task Notify ───────────────────────────────────────────────────────────────
+
+
+class NotifyBody(BaseModel):
+    subject: str
+    body: str
+
+
+@router.post("/clinics/{clinic_id}/tasks/{clinic_task_id}/notify")
+def notify_clinic_task(
+    clinic_id: str,
+    clinic_task_id: str,
+    body: NotifyBody,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    require_admin(request)
+    ct = (
+        db.query(ClinicTask)
+        .filter(ClinicTask.id == clinic_task_id, ClinicTask.clinic_id == clinic_id)
+        .first()
+    )
+    if not ct:
+        raise HTTPException(status_code=404, detail="Task not found")
+    clinic = ct.clinic
+    from email_service import _send
+
+    _send(to=clinic.email_contact, subject=body.subject, body=body.body)
+    return {"message": "Notification sent", "to": clinic.email_contact}
+
+
 # ── Task Instructions ─────────────────────────────────────────────────────────
 
 

@@ -4,17 +4,22 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-from db import get_db, Clinic, Task, ClinicTask, ClinicFile
+from db import get_db, Clinic, Task, ClinicTask, ClinicFile, PortalUser
 from llm import process_instructions
-from email_service import send_sent_back_notification
+from email_service import send_sent_back_notification, send_welcome_email
+from auth import slugify, generate_password, hash_password
 import sse
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
 def require_admin(request: Request):
-    # Auth removed for demo — all requests treated as internal_admin
-    return {"role": "internal_admin", "preferred_username": "admin"}
+    user = getattr(request.state, "user", None)
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    if user.get("role") not in ("admin", "internal_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
 
 
 # ── Clinics ──────────────────────────────────────────────────────────────────
@@ -23,13 +28,11 @@ def require_admin(request: Request):
 class ClinicCreate(BaseModel):
     name: str
     email_contact: str
-    keycloak_username: Optional[str] = None
 
 
 class ClinicUpdate(BaseModel):
     name: Optional[str] = None
     email_contact: Optional[str] = None
-    keycloak_username: Optional[str] = None
 
 
 @router.get("/clinics")
@@ -41,12 +44,13 @@ def list_clinics(request: Request, db: Session = Depends(get_db)):
         active = [t for t in c.tasks if t.enabled]
         complete = [t for t in active if t.status == "Complete"]
         progress = round(len(complete) / len(active) * 100) if active else 0
+        portal_user = db.query(PortalUser).filter(PortalUser.clinic_id == c.id).first()
         result.append(
             {
                 "id": c.id,
                 "name": c.name,
                 "email_contact": c.email_contact,
-                "keycloak_username": c.keycloak_username,
+                "username": portal_user.username if portal_user else None,
                 "progress": progress,
                 "tasks_complete": len(complete),
                 "tasks_total": len(active),
@@ -59,11 +63,16 @@ def list_clinics(request: Request, db: Session = Depends(get_db)):
 @router.post("/clinics")
 def create_clinic(request: Request, body: ClinicCreate, db: Session = Depends(get_db)):
     require_admin(request)
-    clinic = Clinic(
-        name=body.name,
-        email_contact=body.email_contact,
-        keycloak_username=body.keycloak_username,
-    )
+
+    # Ensure unique username by appending a counter if needed
+    base_slug = slugify(body.name)
+    username = base_slug
+    counter = 2
+    while db.query(PortalUser).filter(PortalUser.username == username).first():
+        username = f"{base_slug}-{counter}"
+        counter += 1
+
+    clinic = Clinic(name=body.name, email_contact=body.email_contact)
     db.add(clinic)
     db.flush()
 
@@ -75,11 +84,31 @@ def create_clinic(request: Request, body: ClinicCreate, db: Session = Depends(ge
         )
         db.add(ct)
 
+    # Create portal user
+    password = generate_password()
+    portal_user = PortalUser(
+        username=username,
+        password_hash=hash_password(password),
+        role="clinic_partner",
+        email=body.email_contact,
+        clinic_id=clinic.id,
+    )
+    db.add(portal_user)
     db.commit()
     db.refresh(clinic)
+
+    # Send welcome email
+    send_welcome_email(
+        clinic_name=body.name,
+        email=body.email_contact,
+        username=username,
+        password=password,
+    )
+
     return {
         "id": clinic.id,
         "name": clinic.name,
+        "username": username,
         "message": "Clinic created with all tasks",
     }
 
@@ -94,7 +123,6 @@ def get_clinic(clinic_id: str, request: Request, db: Session = Depends(get_db)):
         "id": clinic.id,
         "name": clinic.name,
         "email_contact": clinic.email_contact,
-        "keycloak_username": clinic.keycloak_username,
         "created_at": clinic.created_at.isoformat() if clinic.created_at else None,
     }
 
@@ -111,8 +139,6 @@ def update_clinic(
         clinic.name = body.name
     if body.email_contact is not None:
         clinic.email_contact = body.email_contact
-    if body.keycloak_username is not None:
-        clinic.keycloak_username = body.keycloak_username
     db.commit()
     return {"message": "Updated"}
 

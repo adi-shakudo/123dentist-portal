@@ -28,13 +28,22 @@ def get_db():
         db.close()
 
 
+class PortalUser(Base):
+    __tablename__ = "portal_users"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    username = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    role = Column(String, nullable=False)
+    email = Column(String, nullable=False)
+    clinic_id = Column(String, ForeignKey("clinics.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class Clinic(Base):
     __tablename__ = "clinics"
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String, nullable=False)
     email_contact = Column(String, nullable=False)
-    keycloak_user_id = Column(String, unique=True, nullable=True)
-    keycloak_username = Column(String, unique=True, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     tasks = relationship(
         "ClinicTask", back_populates="clinic", cascade="all, delete-orphan"

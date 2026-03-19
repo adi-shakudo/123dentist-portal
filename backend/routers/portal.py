@@ -9,17 +9,27 @@ router = APIRouter(prefix="/api/portal", tags=["portal"])
 
 
 def get_clinic_from_session(request: Request, db: Session) -> Clinic:
-    # Auth removed for demo — use ?clinic_id= query param or first clinic
-    clinic_id = request.query_params.get("clinic_id")
-    if clinic_id:
+    user = getattr(request.state, "user", None)
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    if user.get("role") in ("admin", "internal_admin"):
+        clinic_id = request.query_params.get("clinic_id")
+        if not clinic_id:
+            raise HTTPException(
+                status_code=400, detail="clinic_id required for admin portal preview"
+            )
         clinic = db.query(Clinic).filter(Clinic.id == clinic_id).first()
     else:
-        clinic = db.query(Clinic).first()
-    if not clinic:
-        raise HTTPException(
-            status_code=404,
-            detail="No clinic found. Create a clinic via the admin panel first.",
+        clinic_id = user.get("clinic_id")
+        clinic = (
+            db.query(Clinic).filter(Clinic.id == clinic_id).first()
+            if clinic_id
+            else None
         )
+
+    if not clinic:
+        raise HTTPException(status_code=404, detail="No clinic found for this account.")
     return clinic
 
 

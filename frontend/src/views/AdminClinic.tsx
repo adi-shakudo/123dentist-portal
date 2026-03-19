@@ -127,7 +127,7 @@ export default function AdminClinic({ user }: Props) {
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               System Online
             </div>
-            <a href="/auth/logout" className="flex items-center gap-1 text-[10px] text-white/40 hover:text-white/70 transition-colors">
+            <a onClick={() => fetch("/api/auth/logout", {method:"POST"}).then(() => window.location.href="/")} href="#" className="flex items-center gap-1 text-[10px] text-white/40 hover:text-white/70 transition-colors">
               <LogOut className="w-3 h-3" />
               Sign out
             </a>

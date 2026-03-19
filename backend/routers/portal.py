@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -136,6 +137,17 @@ def get_progress(request: Request, db: Session = Depends(get_db)):
         "tasks_complete": complete,
         "tasks_total": total,
         "sections": sections,
+    }
+
+
+@router.get("/info")
+def get_portal_info(request: Request, db: Session = Depends(get_db)):
+    clinic = get_clinic_from_session(request, db)
+    return {
+        "clinic_id": clinic.id,
+        "clinic_name": clinic.name,
+        "details": json.loads(clinic.details) if clinic.details else [],
+        "contacts": json.loads(clinic.contacts) if clinic.contacts else [],
     }
 
 

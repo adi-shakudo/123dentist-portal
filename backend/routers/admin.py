@@ -1,7 +1,8 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Any
 from datetime import datetime
 
 from db import get_db, Clinic, Task, ClinicTask, ClinicFile, PortalUser
@@ -141,6 +142,45 @@ def update_clinic(
         clinic.email_contact = body.email_contact
     db.commit()
     return {"message": "Updated"}
+
+
+# ── Clinic Info ───────────────────────────────────────────────────────────────
+
+
+class InfoUpdate(BaseModel):
+    details: Optional[List[Any]] = None
+    contacts: Optional[List[Any]] = None
+
+
+@router.get("/clinics/{clinic_id}/info")
+def get_clinic_info(clinic_id: str, request: Request, db: Session = Depends(get_db)):
+    require_admin(request)
+    clinic = db.query(Clinic).filter(Clinic.id == clinic_id).first()
+    if not clinic:
+        raise HTTPException(status_code=404, detail="Clinic not found")
+    return {
+        "details": json.loads(clinic.details) if clinic.details else [],
+        "contacts": json.loads(clinic.contacts) if clinic.contacts else [],
+    }
+
+
+@router.patch("/clinics/{clinic_id}/info")
+def update_clinic_info(
+    clinic_id: str, body: InfoUpdate, request: Request, db: Session = Depends(get_db)
+):
+    require_admin(request)
+    clinic = db.query(Clinic).filter(Clinic.id == clinic_id).first()
+    if not clinic:
+        raise HTTPException(status_code=404, detail="Clinic not found")
+    if body.details is not None:
+        clinic.details = json.dumps(body.details)
+    if body.contacts is not None:
+        clinic.contacts = json.dumps(body.contacts)
+    db.commit()
+    return {
+        "details": json.loads(clinic.details) if clinic.details else [],
+        "contacts": json.loads(clinic.contacts) if clinic.contacts else [],
+    }
 
 
 # ── Clinic Tasks ──────────────────────────────────────────────────────────────

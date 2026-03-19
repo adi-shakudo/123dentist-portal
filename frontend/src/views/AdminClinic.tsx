@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Upload, LogOut, X, Building2, FolderOpen, ChevronRight, Eye } from 'lucide-react'
+import { ArrowLeft, Upload, LogOut, X, Building2, FolderOpen, ChevronRight, Eye, ListTodo, Info } from 'lucide-react'
 import TaskRow from '../components/TaskRow'
 import ProgressBar from '../components/ProgressBar'
+import ClinicInfoEditor from '../components/ClinicInfoEditor'
 
 interface Task {
   clinic_task_id: string; task_id: string; ref_id: string; name: string
@@ -16,6 +17,7 @@ interface Clinic { id: string; name: string; email_contact: string }
 interface Props { user: { name: string; email: string } }
 
 const EXHIBIT_ORDER = ['Financial Due Diligence', 'Legal Due Diligence', 'Lease', 'Closing Day', 'Onboarding & Integration']
+type AdminTab = 'tasks' | 'info'
 
 export default function AdminClinic({ user }: Props) {
   const { clinicId } = useParams<{ clinicId: string }>()
@@ -25,6 +27,7 @@ export default function AdminClinic({ user }: Props) {
   const [uploading, setUploading] = useState(false)
   const [uploadTaskId, setUploadTaskId] = useState('')
   const [showUpload, setShowUpload] = useState(false)
+  const [activeTab, setActiveTab] = useState<AdminTab>('tasks')
   const fileRef = useRef<HTMLInputElement>(null)
 
   const load = () => {
@@ -193,32 +196,48 @@ export default function AdminClinic({ user }: Props) {
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
-          <div className="bg-white border border-[#dde4ed] rounded-xl p-6">
-            <h2 className="text-xs font-medium text-[#6b7a8d] uppercase tracking-wide mb-4">Overall Progress</h2>
-            <ProgressBar pct={progress} complete={complete.length} total={active.length} />
+        <div className="bg-white border-b border-[#dde4ed] px-8 shrink-0">
+          <div className="flex">
+            {([['tasks', 'Tasks', ListTodo], ['info', 'Clinic Info', Info]] as [AdminTab, string, any][]).map(([id, label, Icon]) => (
+              <button key={id} onClick={() => setActiveTab(id)} className={'flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ' + (activeTab === id ? 'border-[#1e3a4f] text-[#1e3a4f]' : 'border-transparent text-[#6b7a8d] hover:text-[#1a2a38]')}>
+                <Icon className="w-4 h-4" />{label}
+              </button>
+            ))}
           </div>
+        </div>
 
-          {grouped.map(({ exhibit, tasks: sectionTasks }) => {
-            const sectionComplete = sectionTasks.filter(t => t.enabled && t.status === 'Complete').length
-            const sectionActive = sectionTasks.filter(t => t.enabled && !t.is_tbd).length
-            return (
-              <section key={exhibit}>
-                <div className="flex items-center gap-3 mb-3">
-                  <h2 className="text-lg font-semibold text-[#1a2a38]">{exhibit}</h2>
-                  <span className="text-xs font-medium text-[#6b7a8d] bg-gray-100 px-2.5 py-0.5 rounded-full">
-                    {sectionComplete} / {sectionActive} complete
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {sectionTasks.map(t => (
-                    <TaskRow key={t.clinic_task_id} task={t} isAdmin clinicId={clinicId}
-                      onStatusChange={updateStatus} onToggle={toggleTask} />
-                  ))}
-                </div>
-              </section>
-            )
-          })}
+        <main className="flex-1 overflow-y-auto px-8 py-6">
+          {activeTab === 'tasks' && (
+            <div className="space-y-8">
+              <div className="bg-white border border-[#dde4ed] rounded-xl p-6">
+                <h2 className="text-xs font-medium text-[#6b7a8d] uppercase tracking-wide mb-4">Overall Progress</h2>
+                <ProgressBar pct={progress} complete={complete.length} total={active.length} />
+              </div>
+              {grouped.map(({ exhibit, tasks: sectionTasks }) => {
+                const sectionComplete = sectionTasks.filter(t => t.enabled && t.status === 'Complete').length
+                const sectionActive = sectionTasks.filter(t => t.enabled && !t.is_tbd).length
+                return (
+                  <section key={exhibit}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <h2 className="text-lg font-semibold text-[#1a2a38]">{exhibit}</h2>
+                      <span className="text-xs font-medium text-[#6b7a8d] bg-gray-100 px-2.5 py-0.5 rounded-full">
+                        {sectionComplete} / {sectionActive} complete
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {sectionTasks.map(t => (
+                        <TaskRow key={t.clinic_task_id} task={t} isAdmin clinicId={clinicId}
+                          onStatusChange={updateStatus} onToggle={toggleTask} />
+                      ))}
+                    </div>
+                  </section>
+                )
+              })}
+            </div>
+          )}
+          {activeTab === 'info' && clinicId && (
+            <ClinicInfoEditor clinicId={clinicId} />
+          )}
         </main>
       </div>
     </div>

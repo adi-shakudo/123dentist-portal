@@ -44,6 +44,8 @@ class Clinic(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String, nullable=False)
     email_contact = Column(String, nullable=False)
+    details = Column(Text, nullable=True)
+    contacts = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     tasks = relationship(
         "ClinicTask", back_populates="clinic", cascade="all, delete-orphan"

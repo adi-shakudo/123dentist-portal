@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { LogOut, LayoutDashboard, ArrowLeft, ListTodo, CalendarDays, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
+import { LogOut, LayoutDashboard, ArrowLeft, ListTodo, CalendarDays, CheckCircle2, Clock, AlertCircle, Info } from 'lucide-react'
 import TaskRow from '../components/TaskRow'
 import ProgressBar from '../components/ProgressBar'
 import StatusBadge from '../components/StatusBadge'
+import ClinicInfoEditor from '../components/ClinicInfoEditor'
+import ClinicInfoEditor from '../components/ClinicInfoEditor'
 
 interface Task {
   task_id: string; ref_id: string; name: string; phase: number; exhibit: string
@@ -55,7 +57,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   Low: 'text-gray-500 bg-gray-50 border-gray-200',
 }
 
-type TabId = 'tasks' | 'calendar'
+type TabId = 'tasks' | 'calendar' | 'info'
 
 export default function ClinicPortal({ user, adminPreview }: Props) {
   const { clinicId: routeClinicId } = useParams<{ clinicId: string }>()
@@ -139,6 +141,10 @@ export default function ClinicPortal({ user, adminPreview }: Props) {
               <CalendarDays className="h-4 w-4 shrink-0" />
               Timeline
             </button>
+            <button onClick={() => setActiveTab('info')} className={'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium w-full text-left transition-colors ' + (activeTab === 'info' ? 'bg-[#284d65] text-white' : 'text-white/70 hover:bg-white/5 hover:text-white')}>
+              <Info className="h-4 w-4 shrink-0" />
+              Clinic Info
+            </button>
           </div>
 
           {progress && (
@@ -204,7 +210,7 @@ export default function ClinicPortal({ user, adminPreview }: Props) {
 
         <div className="bg-white border-b border-[#dde4ed] px-8 shrink-0">
           <div className="flex">
-            {([['tasks', 'Task List', ListTodo], ['calendar', 'Timeline', CalendarDays]] as [TabId, string, any][]).map(([id, label, Icon]) => (
+            {([['tasks', 'Task List', ListTodo], ['calendar', 'Timeline', CalendarDays], ['info', 'Clinic Info', Info]] as [TabId, string, any][]).map(([id, label, Icon]) => (
               <button key={id} onClick={() => setActiveTab(id)} className={'flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ' + (activeTab === id ? 'border-[#1e3a4f] text-[#1e3a4f]' : 'border-transparent text-[#6b7a8d] hover:text-[#1a2a38]')}>
                 <Icon className="w-4 h-4" />
                 {label}
@@ -347,6 +353,9 @@ export default function ClinicPortal({ user, adminPreview }: Props) {
                 </div>
               )}
             </div>
+          )}
+          {activeTab === 'info' && clinicId && (
+            <ClinicInfoEditor clinicId={clinicId} readOnly />
           )}
         </main>
       </div>

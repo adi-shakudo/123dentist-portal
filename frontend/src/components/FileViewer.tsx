@@ -11,7 +11,7 @@ interface Props {
 type ViewState =
   | { status: 'loading' }
   | { status: 'pdf'; url: string }
-  | { status: 'office'; googleUrl: string; officeUrl: string; presignedUrl: string }
+  | { status: 'office'; googleUrl: string; officeUrl: string; streamUrl: string }
   | { status: 'error'; message: string }
 
 export default function FileViewer({ fileId, clinicId, filename, onClose }: Props) {
@@ -34,7 +34,7 @@ export default function FileViewer({ fileId, clinicId, filename, onClose }: Prop
           status: 'office',
           googleUrl: data.google_viewer_url,
           officeUrl: data.office_viewer_url,
-          presignedUrl: data.presigned_url,
+          streamUrl: data.stream_url,
         })
       })
       .catch(e => setView({ status: 'error', message: String(e) }))
@@ -71,7 +71,7 @@ export default function FileViewer({ fileId, clinicId, filename, onClose }: Prop
               </button>
             )}
             <a
-              href={view.status === 'pdf' ? view.url : view.status === 'office' ? view.presignedUrl : '#'}
+              href={view.status === 'pdf' ? view.url : view.status === 'office' ? view.streamUrl : '#'}
               download={filename}
               className="flex items-center gap-1.5 text-xs text-[#6b7a8d] hover:text-[#1a2a38] border border-[#dde4ed] rounded-lg px-3 py-1.5 transition-colors"
             >

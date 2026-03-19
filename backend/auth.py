@@ -55,12 +55,20 @@ def get_session(request: Request) -> dict | None:
 
 
 _PUBLIC_PATHS = {"/api/auth/login", "/api/auth/logout", "/api/auth/forgot-password"}
+_PUBLIC_PREFIXES = (
+    "/assets/",
+    "/api/files/",
+)  # file stream is public for viewer embeds
 
 
 async def auth_middleware(request: Request, call_next):
     path = request.url.path
 
-    if path in _PUBLIC_PATHS or path.startswith("/assets/") or path == "/favicon.ico":
+    if (
+        path in _PUBLIC_PATHS
+        or any(path.startswith(p) for p in _PUBLIC_PREFIXES)
+        or path == "/favicon.ico"
+    ):
         return await call_next(request)
 
     session = get_session(request)

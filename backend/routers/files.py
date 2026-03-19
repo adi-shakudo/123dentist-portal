@@ -173,17 +173,19 @@ def view_file(
             },
         )
 
-    presigned = get_presigned_url(f.storage_key, expires_seconds=900)
-    if not presigned:
-        raise HTTPException(status_code=500, detail="Could not generate view URL")
+    from config import APP_BASE_URL
+    import urllib.parse
+
+    stream_url = f"{APP_BASE_URL}/api/files/{file_id}/stream"
+    encoded = urllib.parse.quote(stream_url, safe="")
 
     return {
         "view_type": "office",
         "filename": f.original_filename,
         "ext": ext,
-        "presigned_url": presigned,
-        "google_viewer_url": f"https://docs.google.com/viewer?url={presigned}&embedded=true",
-        "office_viewer_url": f"https://view.officeapps.live.com/op/embed.aspx?src={presigned}",
+        "stream_url": stream_url,
+        "google_viewer_url": f"https://docs.google.com/viewer?url={encoded}&embedded=true",
+        "office_viewer_url": f"https://view.officeapps.live.com/op/embed.aspx?src={encoded}",
     }
 
 
